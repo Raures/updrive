@@ -2,6 +2,7 @@ package com.rmunteanu.updrive.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -24,11 +25,7 @@ public class FileMetadata {
     boolean active;
 
     @Column(name = "creation_date", nullable = false)
+    @CreationTimestamp
     LocalDateTime creationDate;
-
-    @PrePersist
-    protected void onCreate() {
-        creationDate = LocalDateTime.now();
-    }
 
 }
