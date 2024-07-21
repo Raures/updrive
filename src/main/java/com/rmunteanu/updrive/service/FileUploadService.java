@@ -48,7 +48,7 @@ public class FileUploadService {
 
     private FileMetadata transform(FileMetadataDTO fileMetadataDTO) {
         FileMetadata fileMetadata = new FileMetadata();
-        if (fileMetadataDTO.availabilityTime() == null) {
+        if (fileMetadataDTO.availabilityTime() == null || fileMetadataDTO.availabilityTime() == 0) {
             int defaultAvailabilityTime = Integer.parseInt(Objects.requireNonNull(environment.getProperty("file.available.time")));
             System.out.println("No availability time provided, using default: " + defaultAvailabilityTime + " hours.");
             fileMetadata.setAvailabilityTime(defaultAvailabilityTime);
@@ -56,6 +56,8 @@ public class FileUploadService {
             throw new RuntimeException("Availability time can not be greater than 6000!");
         } else if (fileMetadataDTO.availabilityTime() <= 0) {
             throw new RuntimeException("Availability time can not be less or equal to 0!");
+        } else {
+            fileMetadata.setAvailabilityTime(fileMetadataDTO.availabilityTime());
         }
         fileMetadata.setActive(true);
         return fileMetadata;
