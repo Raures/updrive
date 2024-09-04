@@ -76,9 +76,9 @@ public class FileUploadService {
         return store(fileMetadata);
     }
 
-    private DownloadLinkDTO createDownloadLink(String slotId) {
-        String url = "http://localhost:8080/" + slotId;
-        return new DownloadLinkDTO(url);
+    private DownloadLinkDTO createDownloadLink(String uploadName, String slotId) {
+        String url = "http://localhost:8080/api/v1/download/" + slotId;
+        return new DownloadLinkDTO(uploadName, url);
     }
 
     private String getArchiveNameTemplate() {
@@ -87,6 +87,7 @@ public class FileUploadService {
 
     public DownloadLinkDTO uploadFiles(MultipartFile[] files, String slotId) {
         FileMetadata fileMetadata = fileRepository.readBySlotId(slotId);
+        String uploadName;
         int numFiles = files.length;
         if (fileMetadata != null) {
             if (!fileMetadata.isActive()) {
@@ -99,11 +100,12 @@ public class FileUploadService {
                     // Create UUID folder in "data" folder
                     Path folder = Files.createDirectory(slotFolder);
                     if (numFiles == 1) {
-                        handleSingleFileUpload(files, folder);
+                        uploadName = handleSingleFileUpload(files, folder);
                     } else {
-                        handleManyFilesUpload(files, folder);
+                        uploadName = handleManyFilesUpload(files, folder);
                     }
                     fileMetadata.setActive(false);
+                    computeExpirationDate(fileMetadata);
                     fileRepository.save(fileMetadata);
                 } catch (Exception e) {
                     try {
@@ -120,16 +122,18 @@ public class FileUploadService {
         } else {
             throw new RuntimeException("Slot ID does not exist.");
         }
-        return createDownloadLink(slotId);
+        return createDownloadLink(uploadName, slotId);
     }
 
-    private void handleSingleFileUpload(MultipartFile[] files, Path folder) throws IOException {
+    private String handleSingleFileUpload(MultipartFile[] files, Path folder) throws IOException {
         // Save file in the UUID folder
         MultipartFile file = files[0];
         Files.copy(file.getInputStream(), Path.of(folder.toString(), file.getOriginalFilename()));
+        return file.getOriginalFilename();
     }
 
-    private void handleManyFilesUpload(MultipartFile[] files, Path folder) throws IOException {
+    private String handleManyFilesUpload(MultipartFile[] files, Path folder) throws IOException {
+        String uploadName;
         // Save all files in the UUID folder
         for (MultipartFile file : files) {
             Files.copy(file.getInputStream(), Path.of(folder.toString(), file.getOriginalFilename()));
@@ -138,6 +142,7 @@ public class FileUploadService {
         String firstFileName = files[0].getOriginalFilename().split("\\.")[0];
         String currentDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("y_M_d_H_m"));
         File zipArchive = new File(folder.toString(), getArchiveNameTemplate().formatted(firstFileName, currentDate));
+        uploadName = zipArchive.getName();
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipArchive))) {
             File[] savedFiles = folder.toFile().listFiles();
             assert savedFiles != null;
@@ -163,5 +168,11 @@ public class FileUploadService {
                 Files.delete(file.toPath());
             }
         }
+        return uploadName;
+    }
+
+    private void computeExpirationDate(FileMetadata fileMetadata) {
+        LocalDateTime expirationDate = LocalDateTime.now().plusHours(fileMetadata.getAvailabilityTime());
+        fileMetadata.setExpirationDate(expirationDate);
     }
 }

@@ -24,6 +24,9 @@ public class FileDownloadService {
         if (fileMetadata == null) {
             throw new RuntimeException("Slot ID does not exist.");
         }
+        if (fileMetadata.isExpired()) {
+            throw new RuntimeException("Slot has expired on " + fileMetadata.getExpirationDate() + ".");
+        }
         String dataFolder = Objects.requireNonNull(environment.getProperty("file.data.directory"));
         Path filesPath = Path.of(dataFolder, slotId);
         if (Files.exists(filesPath)) {

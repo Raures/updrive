@@ -34,7 +34,17 @@
     <tr>
         <td>active</td>
         <td>BOOLEAN NOT NULL</td>
-        <td>Whether the slot is still available or not. Becomes false after uploading files.</td>
+        <td>Whether the slot is still available. Becomes false after uploading files.</td>
+    </tr>
+    <tr>
+        <td>expired</td>
+        <td>BOOLEAN DEFAULT FALSE</td>
+        <td>Whether the slot has expired. Becomes true on <i>expiration_date</i>.</td>
+    </tr>
+    <tr>
+        <td>expiration_date</td>
+        <td>TIMESTAMP DEFAULT NULL</td>
+        <td>When the slot expires.</td>
     </tr>
     <tr>
         <td>creation_date</td>

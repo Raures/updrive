@@ -24,6 +24,13 @@ public class FileMetadata {
     @Column(name = "active")
     boolean active;
 
+    @Column(name = "expired")
+    boolean expired;
+
+    @Column(name = "expiration_date", nullable = false)
+    @CreationTimestamp
+    LocalDateTime expirationDate;
+
     @Column(name = "creation_date", nullable = false)
     @CreationTimestamp
     LocalDateTime creationDate;
