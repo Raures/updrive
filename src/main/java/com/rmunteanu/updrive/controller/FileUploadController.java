@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("api/v1")
+@RequestMapping("api/v1/upload")
 @RequiredArgsConstructor
 public class FileUploadController {
 
     private final FileUploadService fileUploadService;
 
-    @PostMapping("/upload/metadata")
+    @PostMapping("/metadata")
     public ResponseEntity<UploadSlotDTO> uploadMetadata(@RequestBody FileMetadataDTO fileMetadataDto) {
         UploadSlotDTO uploadSlotDTO = fileUploadService.uploadFileMetadata(fileMetadataDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(uploadSlotDTO);
     }
 
-    @PostMapping("/upload/files/{slotId}")
+    @PostMapping("/files/{slotId}")
     public ResponseEntity<DownloadLinkDTO> uploadFiles(@RequestParam("file") MultipartFile[] files, @PathVariable("slotId") String slotId) {
         DownloadLinkDTO downloadLinkDTO = fileUploadService.uploadFiles(files, slotId);
         return ResponseEntity.status(HttpStatus.CREATED).body(downloadLinkDTO);
