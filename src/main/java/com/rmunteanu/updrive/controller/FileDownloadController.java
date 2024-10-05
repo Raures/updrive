@@ -1,7 +1,7 @@
 package com.rmunteanu.updrive.controller;
 
 import com.rmunteanu.updrive.service.FileDownloadService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,10 +18,13 @@ import java.nio.file.Path;
 
 @Controller
 @RequestMapping("api/v1/download")
-@RequiredArgsConstructor
 public class FileDownloadController {
 
     private final FileDownloadService fileDownloadService;
+
+    FileDownloadController(@Autowired FileDownloadService fileDownloadService) {
+        this.fileDownloadService = fileDownloadService;
+    }
 
     @GetMapping("/{slotId}")
     public ResponseEntity<byte[]> downloadFiles(@PathVariable("slotId") String slotId) throws IOException {

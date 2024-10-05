@@ -2,7 +2,7 @@ package com.rmunteanu.updrive.service;
 
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,15 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 @Service
-@RequiredArgsConstructor
 public class FileDownloadService {
 
     private final FileRepository fileRepository;
     private final Environment environment;
+
+    FileDownloadService(@Autowired FileRepository fileRepository, @Autowired Environment environment) {
+        this.fileRepository = fileRepository;
+        this.environment = environment;
+    }
 
     public Path downloadFiles(String slotId) {
         FileMetadata fileMetadata = fileRepository.readBySlotId(slotId);

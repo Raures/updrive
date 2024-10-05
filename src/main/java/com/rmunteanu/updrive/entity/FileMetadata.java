@@ -1,14 +1,12 @@
 package com.rmunteanu.updrive.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "file_metadata")
-@Data
 public class FileMetadata {
 
     @Id
@@ -34,5 +32,45 @@ public class FileMetadata {
     @Column(name = "creation_date", nullable = false)
     @CreationTimestamp
     LocalDateTime creationDate;
+
+    public String getSlotId() {
+        return slotId;
+    }
+
+    public void setSlotId(String slotId) {
+        this.slotId = slotId;
+    }
+
+    public int getAvailabilityTime() {
+        return availabilityTime;
+    }
+
+    public void setAvailabilityTime(int availabilityTime) {
+        this.availabilityTime = availabilityTime;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
+
+    public LocalDateTime getExpirationDate() {
+        return expirationDate;
+    }
+
+    public void setExpirationDate(LocalDateTime expirationDate) {
+        this.expirationDate = expirationDate;
+    }
 
 }

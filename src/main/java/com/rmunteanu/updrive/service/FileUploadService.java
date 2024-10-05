@@ -6,9 +6,9 @@ import com.rmunteanu.updrive.dto.FileMetadataDTO;
 import com.rmunteanu.updrive.dto.UploadSlotDTO;
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,13 +27,17 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
-@RequiredArgsConstructor
 public class FileUploadService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadService.class);
 
     private final FileRepository fileRepository;
     private final Environment environment;
+
+    FileUploadService(@Autowired FileRepository fileRepository, @Autowired Environment environment) {
+        this.fileRepository = fileRepository;
+        this.environment = environment;
+    }
 
     private void validate(FileMetadataDTO fileMetadataDTO) {
         if (LOGGER.isDebugEnabled()) {

@@ -2,10 +2,10 @@ package com.rmunteanu.updrive.service;
 
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
-import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,13 +16,17 @@ import java.util.List;
 import java.util.Objects;
 
 @Component
-@RequiredArgsConstructor
 public class ScheduledTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTask.class);
 
     private final FileRepository fileRepository;
     private final Environment environment;
+
+    ScheduledTask(@Autowired FileRepository fileRepository, @Autowired Environment environment) {
+        this.fileRepository = fileRepository;
+        this.environment = environment;
+    }
 
     @Scheduled(fixedRate = 30000)
     public void deleteExpiredFiles() {
