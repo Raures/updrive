@@ -7,6 +7,8 @@ import com.rmunteanu.updrive.dto.UploadSlotDTO;
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,19 +30,27 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class FileUploadService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadService.class);
+
     private final FileRepository fileRepository;
     private final Environment environment;
 
     private void validate(FileMetadataDTO fileMetadataDTO) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Validating file metadata: {}.", fileMetadataDTO);
+        }
         if (fileMetadataDTO.files().length < 1) {
+            LOGGER.error("No files provided.");
             throw new RuntimeException("No files provided.");
         }
         for (FileDTO fileDTO : fileMetadataDTO.files()) {
             String[] fileNameSplit = fileDTO.name().split("\\.");
             if (fileNameSplit.length < 2) {
+                LOGGER.error("File name is invalid, either the name or the extension is missing.");
                 throw new RuntimeException("File name is invalid, either the name or the extension is missing.");
             }
-            if (fileDTO.sizeMB() > 10) {
+            if (fileDTO.sizeMB() > Integer.parseInt(Objects.requireNonNull(environment.getProperty("file.size.max")))) {
+                LOGGER.error("File size can not be greater than 10 MB");
                 throw new RuntimeException("File size can not be greater than 10 MB");
             }
         }
@@ -50,11 +60,13 @@ public class FileUploadService {
         FileMetadata fileMetadata = new FileMetadata();
         if (fileMetadataDTO.availabilityTime() == null || fileMetadataDTO.availabilityTime() == 0) {
             int defaultAvailabilityTime = Integer.parseInt(Objects.requireNonNull(environment.getProperty("file.available.time")));
-            System.out.println("No availability time provided, using default: " + defaultAvailabilityTime + " hours.");
+            LOGGER.info("No availability time provided, using default: {} hours", defaultAvailabilityTime);
             fileMetadata.setAvailabilityTime(defaultAvailabilityTime);
         } else if (fileMetadataDTO.availabilityTime() > 6000) {
+            LOGGER.error("Availability time can not be greater than 6000!");
             throw new RuntimeException("Availability time can not be greater than 6000!");
         } else if (fileMetadataDTO.availabilityTime() <= 0) {
+            LOGGER.error("Availability time can not be less or equal to 0!");
             throw new RuntimeException("Availability time can not be less or equal to 0!");
         } else {
             fileMetadata.setAvailabilityTime(fileMetadataDTO.availabilityTime());
@@ -81,16 +93,13 @@ public class FileUploadService {
         return new DownloadLinkDTO(uploadName, url);
     }
 
-    private String getArchiveNameTemplate() {
-        return "updrive_%s_%s.zip";
-    }
-
     public DownloadLinkDTO uploadFiles(MultipartFile[] files, String slotId) {
         FileMetadata fileMetadata = fileRepository.readBySlotId(slotId);
         String uploadName;
         int numFiles = files.length;
         if (fileMetadata != null) {
             if (!fileMetadata.isActive()) {
+                LOGGER.error("The slot is no longer available. Please create a new upload request.");
                 throw new RuntimeException("The slot is no longer available. Please create a new upload request.");
             }
             if (numFiles > 0 && files[0].getSize() > 0) {
@@ -110,16 +119,19 @@ public class FileUploadService {
                 } catch (Exception e) {
                     try {
                         boolean deleted = Files.deleteIfExists(slotFolder.toAbsolutePath());
-                        System.out.println("Deleted path: " + deleted);
+                        LOGGER.error("Deleted path: {}.", deleted);
                     } catch (IOException f) {
                         // Do nothing
                     }
+                    LOGGER.error("Failed to create a new directory.", e);
                     throw new RuntimeException("Failed to create a new directory.", e);
                 }
             } else {
+                LOGGER.error("No files were provided.");
                 throw new RuntimeException("No files were provided.");
             }
         } else {
+            LOGGER.error("Slot ID does not exist.");
             throw new RuntimeException("Slot ID does not exist.");
         }
         return createDownloadLink(uploadName, slotId);
@@ -141,7 +153,7 @@ public class FileUploadService {
         // Create archive in UUID folder and place the files inside
         String firstFileName = files[0].getOriginalFilename().split("\\.")[0];
         String currentDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("y_M_d_H_m"));
-        File zipArchive = new File(folder.toString(), getArchiveNameTemplate().formatted(firstFileName, currentDate));
+        File zipArchive = new File(folder.toString(), "updrive_%s_%s.zip".formatted(firstFileName, currentDate));
         uploadName = zipArchive.getName();
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipArchive))) {
             File[] savedFiles = folder.toFile().listFiles();
