@@ -10,6 +10,7 @@ public class UploadConfiguration {
     private Integer availableTime;
     private String dataDirectory;
     private Integer sizeMax;
+    private String defaultName;
 
     public Integer getAvailableTime() {
         return availableTime;
@@ -34,4 +35,13 @@ public class UploadConfiguration {
     public void setSizeMax(Integer sizeMax) {
         this.sizeMax = sizeMax;
     }
+
+    public String getDefaultName() {
+        return defaultName;
+    }
+
+    public void setDefaultName(String defaultName) {
+        this.defaultName = defaultName;
+    }
+
 }
