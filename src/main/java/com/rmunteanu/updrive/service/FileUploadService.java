@@ -2,15 +2,13 @@ package com.rmunteanu.updrive.service;
 
 import com.rmunteanu.updrive.configuration.UploadConfiguration;
 import com.rmunteanu.updrive.controller.exception.*;
-import com.rmunteanu.updrive.dto.DownloadLinkDTO;
-import com.rmunteanu.updrive.dto.FileDTO;
-import com.rmunteanu.updrive.dto.FileMetadataDTO;
-import com.rmunteanu.updrive.dto.UploadSlotDTO;
+import com.rmunteanu.updrive.dto.*;
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -81,7 +79,9 @@ public class FileUploadService {
 
     private UploadSlotDTO store(FileMetadata fileMetadata) {
         fileRepository.save(fileMetadata);
-        return new UploadSlotDTO(fileMetadata.getSlotId());
+        LinkDTO[] links = new LinkDTO[1];
+        links[0] = new LinkDTO("http://localhost:8080/api/v1/upload/files/" + fileMetadata.getSlotId(), "upload-files", HttpMethod.POST.name());
+        return new UploadSlotDTO(fileMetadata.getSlotId(), links);
     }
 
     public UploadSlotDTO uploadFileMetadata(FileMetadataDTO fileMetadataDTO) {
@@ -93,8 +93,9 @@ public class FileUploadService {
     }
 
     private DownloadLinkDTO createDownloadLink(String uploadName, String slotId) {
-        String url = "http://localhost:8080/api/v1/download/" + slotId;
-        return new DownloadLinkDTO(uploadName, url);
+        LinkDTO[] links = new LinkDTO[1];
+        links[0] = new LinkDTO("http://localhost:8080/api/v1/download/" + slotId, "download-files", HttpMethod.GET.name());
+        return new DownloadLinkDTO(uploadName, links);
     }
 
     public DownloadLinkDTO uploadFiles(MultipartFile[] files, String slotId) {

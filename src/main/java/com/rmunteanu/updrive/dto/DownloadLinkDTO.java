@@ -1,4 +1,4 @@
 package com.rmunteanu.updrive.dto;
 
-public record DownloadLinkDTO(String upload, String url) {
+public record DownloadLinkDTO(String upload, LinkDTO[] links) {
 }
