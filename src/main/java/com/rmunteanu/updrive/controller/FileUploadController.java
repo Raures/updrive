@@ -1,8 +1,6 @@
 package com.rmunteanu.updrive.controller;
 
 import com.rmunteanu.updrive.dto.DownloadLinkDTO;
-import com.rmunteanu.updrive.dto.FileMetadataDTO;
-import com.rmunteanu.updrive.dto.UploadSlotDTO;
 import com.rmunteanu.updrive.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,12 +16,6 @@ public class FileUploadController {
 
     FileUploadController(@Autowired FileUploadService fileUploadService) {
         this.fileUploadService = fileUploadService;
-    }
-
-    @PostMapping("/metadata")
-    public ResponseEntity<UploadSlotDTO> uploadMetadata(@RequestBody FileMetadataDTO fileMetadataDto) {
-        UploadSlotDTO uploadSlotDTO = fileUploadService.uploadFileMetadata(fileMetadataDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(uploadSlotDTO);
     }
 
     @PostMapping("/files/{slotId}")

@@ -84,6 +84,7 @@ public class FileUploadService {
         return new UploadSlotDTO(fileMetadata.getSlotId(), links);
     }
 
+    // TODO: Create a specialized class FileMetadataService and move this method to it
     public UploadSlotDTO uploadFileMetadata(FileMetadataDTO fileMetadataDTO) {
         validate(fileMetadataDTO);
         FileMetadata fileMetadata = transform(fileMetadataDTO);
