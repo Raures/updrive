@@ -1,19 +1,18 @@
 package com.rmunteanu.updrive.service;
 
+import com.rmunteanu.updrive.configuration.UploadConfiguration;
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileRepository;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class ScheduledTask {
@@ -21,11 +20,11 @@ public class ScheduledTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTask.class);
 
     private final FileRepository fileRepository;
-    private final Environment environment;
+    private final UploadConfiguration uploadConfiguration;
 
-    ScheduledTask(@Autowired FileRepository fileRepository, @Autowired Environment environment) {
+    ScheduledTask(@Autowired FileRepository fileRepository, @Autowired UploadConfiguration uploadConfiguration) {
         this.fileRepository = fileRepository;
-        this.environment = environment;
+        this.uploadConfiguration = uploadConfiguration;
     }
 
     @Scheduled(fixedRate = 30000)
@@ -38,7 +37,7 @@ public class ScheduledTask {
             }
             expiredFileMetadata.forEach(fm -> fm.setExpired(true));
             fileRepository.saveAll(expiredFileMetadata);
-            String dataFolder = Objects.requireNonNull(environment.getProperty("file.data.directory"));
+            String dataFolder = uploadConfiguration.getDataDirectory();
             try {
                 for (FileMetadata fileMetadata : expiredFileMetadata) {
                     FileUtils.deleteDirectory(Path.of(dataFolder, fileMetadata.getSlotId()).toFile());

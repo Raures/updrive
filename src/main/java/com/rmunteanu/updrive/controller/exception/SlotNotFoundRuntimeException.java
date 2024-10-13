@@ -4,6 +4,10 @@ import org.springframework.http.HttpStatus;
 
 public class SlotNotFoundRuntimeException extends RuntimeExceptionREST {
 
+    public SlotNotFoundRuntimeException(String message) {
+        super(HttpStatus.NOT_FOUND, message);
+    }
+
     public SlotNotFoundRuntimeException(String message, Object... args) {
         super(HttpStatus.NOT_FOUND, String.format(message, args));
     }
