@@ -6,7 +6,7 @@ import com.rmunteanu.updrive.controller.exception.SlotExpiredRuntimeException;
 import com.rmunteanu.updrive.controller.exception.SlotNotFoundRuntimeException;
 import com.rmunteanu.updrive.controller.exception.TooManyFilesRuntimeException;
 import com.rmunteanu.updrive.entity.FileMetadata;
-import com.rmunteanu.updrive.repository.FileRepository;
+import com.rmunteanu.updrive.repository.FileMetadataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +21,16 @@ public class FileDownloadService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileDownloadService.class);
 
-    private final FileRepository fileRepository;
+    private final FileMetadataRepository fileMetadataRepository;
     private final UploadConfiguration uploadConfiguration;
 
-    FileDownloadService(@Autowired FileRepository fileRepository, @Autowired UploadConfiguration uploadConfiguration) {
-        this.fileRepository = fileRepository;
+    FileDownloadService(@Autowired FileMetadataRepository fileMetadataRepository, @Autowired UploadConfiguration uploadConfiguration) {
+        this.fileMetadataRepository = fileMetadataRepository;
         this.uploadConfiguration = uploadConfiguration;
     }
 
     public Path downloadFiles(String slotId) {
-        FileMetadata fileMetadata = fileRepository.readBySlotId(slotId);
+        FileMetadata fileMetadata = fileMetadataRepository.readBySlotId(slotId);
         Path filePath;
         if (fileMetadata == null) {
             LOGGER.error("Slot ID {} does not exist.", slotId);

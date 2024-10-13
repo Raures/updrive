@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface FileRepository extends JpaRepository<FileMetadata, Long> {
+public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
     @Query(value = "SELECT * FROM file_metadata WHERE slot_id = ?1;", nativeQuery = true)
     FileMetadata readBySlotId(String slotId);
