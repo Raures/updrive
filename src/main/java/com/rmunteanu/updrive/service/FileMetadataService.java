@@ -1,5 +1,6 @@
 package com.rmunteanu.updrive.service;
 
+import com.rmunteanu.updrive.configuration.ServerConfiguration;
 import com.rmunteanu.updrive.configuration.UploadConfiguration;
 import com.rmunteanu.updrive.controller.exception.InvalidMetadataRuntimeException;
 import com.rmunteanu.updrive.controller.exception.NoFileProvidedRuntimeException;
@@ -27,13 +28,16 @@ public class FileMetadataService {
 
     private final FileMetadataRepository fileMetadataRepository;
     private final UploadConfiguration uploadConfiguration;
+    private final ServerConfiguration serverConfiguration;
     private final Converter<FileMetadataDTO, FileMetadata> converter;
 
     FileMetadataService(@Autowired FileMetadataRepository fileMetadataRepository,
                         @Autowired UploadConfiguration uploadConfiguration,
+                        @Autowired ServerConfiguration serverConfiguration,
                         @Autowired FileMetadataConverter converter) {
         this.fileMetadataRepository = fileMetadataRepository;
         this.uploadConfiguration = uploadConfiguration;
+        this.serverConfiguration = serverConfiguration;
         this.converter = converter;
     }
 
@@ -68,7 +72,7 @@ public class FileMetadataService {
     private UploadSlotDTO store(FileMetadata fileMetadata) {
         fileMetadataRepository.save(fileMetadata);
         LinkDTO[] links = new LinkDTO[1];
-        links[0] = new LinkDTO("http://localhost:8080/api/v1/upload/files/" + fileMetadata.getSlotId(), "upload-files", HttpMethod.POST.name());
+        links[0] = new LinkDTO(serverConfiguration.getServerUrl() + "/api/v1/upload/files/" + fileMetadata.getSlotId(), "upload-files", HttpMethod.POST.name());
         return new UploadSlotDTO(fileMetadata.getSlotId(), links);
     }
 

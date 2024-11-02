@@ -1,5 +1,6 @@
 package com.rmunteanu.updrive.service;
 
+import com.rmunteanu.updrive.configuration.ServerConfiguration;
 import com.rmunteanu.updrive.configuration.UploadConfiguration;
 import com.rmunteanu.updrive.controller.exception.*;
 import com.rmunteanu.updrive.dto.*;
@@ -30,15 +31,19 @@ public class FileUploadService {
 
     private final FileMetadataRepository fileMetadataRepository;
     private final UploadConfiguration uploadConfiguration;
+    private final ServerConfiguration serverConfiguration;
 
-    FileUploadService(@Autowired FileMetadataRepository fileMetadataRepository, @Autowired UploadConfiguration uploadConfiguration) {
+    FileUploadService(@Autowired FileMetadataRepository fileMetadataRepository,
+                      @Autowired UploadConfiguration uploadConfiguration,
+                      @Autowired ServerConfiguration serverConfiguration) {
         this.fileMetadataRepository = fileMetadataRepository;
         this.uploadConfiguration = uploadConfiguration;
+        this.serverConfiguration = serverConfiguration;
     }
 
     private DownloadLinkDTO createDownloadLink(String uploadName, String slotId) {
         LinkDTO[] links = new LinkDTO[1];
-        links[0] = new LinkDTO("http://localhost:8080/api/v1/download/" + slotId, "download-files", HttpMethod.GET.name());
+        links[0] = new LinkDTO(serverConfiguration.getServerUrl() + "/api/v1/download/" + slotId, "download-files", HttpMethod.GET.name());
         return new DownloadLinkDTO(uploadName, links);
     }
 
