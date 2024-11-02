@@ -14,4 +14,7 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
     @Query(value = "SELECT * FROM file_metadata WHERE expiration_date < now() AND active = false AND expired = false;", nativeQuery = true)
     List<FileMetadata> readByExpirationDate();
 
+    @Query(value = "SELECT EXISTS(SELECT * FROM file_metadata WHERE slot_id = ?1);", nativeQuery = true)
+    boolean existsBySlotId(String slotId);
+
 }

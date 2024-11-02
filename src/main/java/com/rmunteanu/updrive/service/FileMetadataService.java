@@ -3,12 +3,15 @@ package com.rmunteanu.updrive.service;
 import com.rmunteanu.updrive.configuration.UploadConfiguration;
 import com.rmunteanu.updrive.controller.exception.InvalidMetadataRuntimeException;
 import com.rmunteanu.updrive.controller.exception.NoFileProvidedRuntimeException;
+import com.rmunteanu.updrive.controller.exception.SlotNotFoundRuntimeException;
 import com.rmunteanu.updrive.dto.FileDTO;
 import com.rmunteanu.updrive.dto.FileMetadataDTO;
 import com.rmunteanu.updrive.dto.LinkDTO;
 import com.rmunteanu.updrive.dto.UploadSlotDTO;
 import com.rmunteanu.updrive.entity.FileMetadata;
 import com.rmunteanu.updrive.repository.FileMetadataRepository;
+import com.rmunteanu.updrive.service.converters.Converter;
+import com.rmunteanu.updrive.service.converters.FileMetadataConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +27,28 @@ public class FileMetadataService {
 
     private final FileMetadataRepository fileMetadataRepository;
     private final UploadConfiguration uploadConfiguration;
+    private final Converter<FileMetadataDTO, FileMetadata> converter;
 
-    FileMetadataService(@Autowired FileMetadataRepository fileMetadataRepository, @Autowired UploadConfiguration uploadConfiguration) {
+    FileMetadataService(@Autowired FileMetadataRepository fileMetadataRepository,
+                        @Autowired UploadConfiguration uploadConfiguration,
+                        @Autowired FileMetadataConverter converter) {
         this.fileMetadataRepository = fileMetadataRepository;
         this.uploadConfiguration = uploadConfiguration;
+        this.converter = converter;
     }
 
     private void validate(FileMetadataDTO fileMetadataDTO) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Validating file metadata: {}.", fileMetadataDTO);
         }
-        if (fileMetadataDTO.files().length < 1) {
+        if (fileMetadataDTO.availabilityTime() != null && (fileMetadataDTO.availabilityTime() <= 0 || fileMetadataDTO.availabilityTime() > 6000)) {
+            LOGGER.error("Invalid availability time: {}", fileMetadataDTO.availabilityTime());
+            throw new InvalidMetadataRuntimeException("Availability time must be between 0 and 6000, your value is: %d", fileMetadataDTO.availabilityTime());
+        }
+    }
+
+    private void validateFiles(FileMetadataDTO fileMetadataDTO) {
+        if (fileMetadataDTO.files() == null || fileMetadataDTO.files().length < 1) {
             LOGGER.error("No files provided.");
             throw new NoFileProvidedRuntimeException("No files were provided.");
         }
@@ -51,25 +65,6 @@ public class FileMetadataService {
         }
     }
 
-    private FileMetadata transform(FileMetadataDTO fileMetadataDTO) {
-        FileMetadata fileMetadata = new FileMetadata();
-        if (fileMetadataDTO.availabilityTime() == null || fileMetadataDTO.availabilityTime() == 0) {
-            int defaultAvailabilityTime = uploadConfiguration.getAvailableTime();
-            LOGGER.info("No availability time provided, using default: {} hours", defaultAvailabilityTime);
-            fileMetadata.setAvailabilityTime(defaultAvailabilityTime);
-        } else if (fileMetadataDTO.availabilityTime() > 6000) {
-            LOGGER.error("Desired availability time exceeds 6000!");
-            throw new InvalidMetadataRuntimeException("Availability time can not be greater than 6000!");
-        } else if (fileMetadataDTO.availabilityTime() <= 0) {
-            LOGGER.error("Desired availability time is less than 0!");
-            throw new InvalidMetadataRuntimeException("Availability time can not be less or equal to 0!");
-        } else {
-            fileMetadata.setAvailabilityTime(fileMetadataDTO.availabilityTime());
-        }
-        fileMetadata.setActive(true);
-        return fileMetadata;
-    }
-
     private UploadSlotDTO store(FileMetadata fileMetadata) {
         fileMetadataRepository.save(fileMetadata);
         LinkDTO[] links = new LinkDTO[1];
@@ -79,10 +74,22 @@ public class FileMetadataService {
 
     public UploadSlotDTO uploadFileMetadata(FileMetadataDTO fileMetadataDTO) {
         validate(fileMetadataDTO);
-        FileMetadata fileMetadata = transform(fileMetadataDTO);
+        validateFiles(fileMetadataDTO);
+        FileMetadata fileMetadata = converter.fromDTO(fileMetadataDTO);
+        fileMetadata.setActive(true);
         String slotId = UUID.randomUUID().toString();
         fileMetadata.setSlotId(slotId);
         return store(fileMetadata);
+    }
+
+    public void updateFileMetadata(String slotId, FileMetadataDTO fileMetadataDTO) {
+        validate(fileMetadataDTO);
+        boolean slotExists = fileMetadataRepository.existsBySlotId(slotId);
+        if (!slotExists) {
+            throw new SlotNotFoundRuntimeException("Slot ID does not exist.");
+        }
+        FileMetadata fileMetadata = converter.fromDTO(fileMetadataDTO);
+        fileMetadataRepository.save(fileMetadata);
     }
 
 }

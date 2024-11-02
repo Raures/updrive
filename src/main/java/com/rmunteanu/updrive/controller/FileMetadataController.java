@@ -20,9 +20,15 @@ public class FileMetadataController {
     }
 
     @PostMapping
-    public ResponseEntity<UploadSlotDTO> uploadFileMetadata(@RequestBody FileMetadataDTO fileMetadataDto) {
-        UploadSlotDTO uploadSlotDTO = fileMetadataService.uploadFileMetadata(fileMetadataDto);
+    public ResponseEntity<UploadSlotDTO> uploadFileMetadata(@RequestBody FileMetadataDTO fileMetadataDTO) {
+        UploadSlotDTO uploadSlotDTO = fileMetadataService.uploadFileMetadata(fileMetadataDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(uploadSlotDTO);
+    }
+
+    @PutMapping("/update/{slotId}")
+    public ResponseEntity<String> updateFileMetadata(@PathVariable("slotId") String slotId, @RequestBody FileMetadataDTO fileMetadataDTO) {
+        fileMetadataService.updateFileMetadata(slotId, fileMetadataDTO);
+        return ResponseEntity.status(HttpStatus.OK).body("Updated file metadata.");
     }
 
 }
